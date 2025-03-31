@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NYC Taxi Fare Predictor</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #45a049; }
+        .result { margin-top: 20px; padding: 15px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>NYC Taxi Fare Prediction</h1>
+    
+    <form id="predictionForm">
+        <div class="form-group">
+            <label>Pickup Date/Time:</label>
+            <input type="datetime-local" id="pickup_datetime" required>
+        </div>
+
+        <div class="form-group">
+            <label>Pickup Longitude:</label>
+            <input type="number" id="pickup_longitude" step="0.000001" min="-74.5" max="-72.5" required>
+        </div>
+
+        <div class="form-group">
+            <label>Pickup Latitude:</label>
+            <input type="number" id="pickup_latitude" step="0.000001" min="40.4" max="41.0" required>
+        </div>
+
+        <div class="form-group">
+            <label>Dropoff Longitude:</label>
+            <input type="number" id="dropoff_longitude" step="0.000001" min="-74.5" max="-72.5" required>
+        </div>
+
+        <div class="form-group">
+            <label>Dropoff Latitude:</label>
+            <input type="number" id="dropoff_latitude" step="0.000001" min="40.4" max="41.0" required>
+        </div>
+
+        <div class="form-group">
+            <label>Passenger Count:</label>
+            <input type="number" id="passenger_count" min="1" max="6" required>
+        </div>
+
+        <button type="submit">Predict Fare</button>
+    </form>
+
+    <div class="result" id="result" style="display: none;">
+        <h3>Predicted Fare: $<span id="predictionAmount"></span></h3>
+        <p>Estimated Trip Distance: <span id="tripDistance"></span> km</p>
+    </div>
+
+    <script>
+        document.getElementById('predictionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const data = {
+                pickup_datetime: document.getElementById('pickup_datetime').value,
+                pickup_longitude: parseFloat(document.getElementById('pickup_longitude').value),
+                pickup_latitude: parseFloat(document.getElementById('pickup_latitude').value),
+                dropoff_longitude: parseFloat(document.getElementById('dropoff_longitude').value),
+                dropoff_latitude: parseFloat(document.getElementById('dropoff_latitude').value),
+                passenger_count: parseInt(document.getElementById('passenger_count').value)
+            };
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById('predictionAmount').textContent = result.prediction;
+                    document.getElementById('tripDistance').textContent = result.trip_distance.toFixed(2);
+                    document.getElementById('result').style.display = 'block';
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                alert('Error making prediction: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>
